@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Derrick's DevOps Lab</title>
+  <script src="https://cdn.jsdelivr.net/npm/xterm@4.9.0/lib/xterm.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@4.9.0/css/xterm.css" />
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background-color: #0e0e1a; color: #f0f0f0; }
+    #sidebar { width: 300px; background-color: #1e1e2f; color: white; padding: 1rem; overflow-y: auto; border-right: 1px solid #2b2b3d; display: flex; flex-direction: column; }
+    #sidebar-header { display: flex; justify-content: space-between; align-items: center; }
+    #sidebar-header h2 { margin: 0; font-size: 20px; color: #00cec9; }
+    .lab-item { margin: 8px 0; padding: 10px; background: #2a2a3d; border-radius: 6px; cursor: pointer; transition: background 0.3s; }
+    .lab-item:hover { background: #3a3a50; }
+    .lab-item.active { background: #00cec9; color: #1e1e2f; }
+    .instructions { padding: 15px; margin-top: 10px; background-color: #181826; border-left: 3px solid #00cec9; font-size: 14px; border-radius: 4px; line-height: 1.6; }
+    .instructions ul { padding-left: 20px; margin: 0 0 15px 0; }
+    .instructions li { margin-bottom: 15px; }
+    .instructions code { background: #2a2a3d; padding: 2px 6px; border-radius: 4px; color: #ff6b6b; }
+    .instructions p { margin: 0; }
+    #main { flex: 1; display: flex; flex-direction: column; background-color: #12121b; }
+    #terminal { flex-grow: 1; padding: 10px; }
+    #check-btn { background: #00b894; border: none; color: white; padding: 10px; margin: 10px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: background 0.2s; width: calc(100% - 20px); }
+    #check-btn:hover { background: #019875; }
+    #nav-buttons { display: flex; justify-content: space-between; padding: 10px 0; margin-top: auto; }
+    #nav-buttons button { background: #00b894; border: none; color: white; padding: 8px 16px; font-size: 14px; border-radius: 6px; cursor: pointer; transition: background 0.2s; flex: 1; margin: 0 5px; }
+    #nav-buttons button:hover { background: #019875; }
+    #nav-buttons button:disabled { background: #555; cursor: not-allowed; }
+    #check-result { padding: 15px; margin: 0 10px 10px; color: #00cec9; background: #1a1a2b; font-family: monospace; border-radius: 4px; border-left: 4px solid #00cec9; white-space: pre-wrap; }
+    body.light { background-color: #ffffff; color: #1e1e2f; }
+    body.light #sidebar { background-color: #f5f5f5; color: #333; border-right: 1px solid #ccc; }
+    body.light .lab-item { background-color: #eaeaea; color: #000; }
+    body.light .lab-item:hover { background-color: #dcdcdc; }
+    body.light .lab-item.active { background: #00cec9; color: #1e1e2f; }
+    body.light #main { background-color: #ffffff; }
+    body.light #terminal { background-color: #f0f0f0; }
+    body.light #check-result { background: #eeeeee; color: #2d3436; border-left-color: #00cec9; }
+    body.light .instructions { background-color: #e0e0e0; color: #333; }
+    body.light .instructions code { background: #d0d0d0; color: #d63031; }
+  </style>
+</head>
+<body class="dark">
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h2>📋 Lab Tasks</h2>
+      <label>
+        <input type="checkbox" id="theme-toggle" onchange="toggleTheme()" />
+        🌗
+      </label>
+    </div>
+    <div id="lab-list"></div>
+    <div class="instructions" id="task-instructions"></div>
+    <div id="nav-buttons">
+      <button id="prev-btn">Previous</button>
+      <button id="next-btn">Next</button>
+      <button id="exit-btn">Exit Lab</button>
+    </div>
+  </div>
+  <div id="main">
+    <div id="terminal"></div>
+    <button id="check-btn">Check Task</button>
+    <pre id="check-result"></pre>
+  </div>
+  <script>
+    let currentLab = null;
+    let currentTask = 0;
+    let labsData = [];
+
+    async function loadLabs() {
+      try {
+        const response = await fetch('/labs');
+        labsData = (await response.json()).labs;
+        const urlParams = new URLSearchParams(window.location.search);
+        const labNumber = parseInt(urlParams.get('lab'), 10);
+        const labList = document.getElementById('lab-list');
+        labList.innerHTML = '';
+        labsData.forEach(lab => {
+          const labItem = document.createElement('div');
+          labItem.className = 'lab-item';
+          labItem.textContent = lab.title;
+          labItem.onclick = () => startLab(lab.number);
+          labList.appendChild(labItem);
+        });
+        if (labNumber && labsData.some(l => l.number === labNumber)) {
+          startLab(labNumber);
+        } else if (labsData.length > 0) {
+          startLab(labsData[0].number);
+        }
+      } catch (error) {
+        console.error('Failed to load labs:', error);
+        document.getElementById('lab-list').innerHTML = '<p>❌ Error loading labs</p>';
+      }
+    }
+
+    function startLab(labNumber) {
+      currentLab = labNumber;
+      currentTask = 0;
+      updateTaskDisplay();
+      updateWebSocket(currentLab);
+      updateLabHighlight();
+    }
+
+    function updateTaskDisplay() {
+      if (!currentLab) {
+        document.getElementById('task-instructions').innerHTML = '';
+        document.getElementById('check-result').textContent = '🔎 Select a lab to begin';
+        document.getElementById('prev-btn').disabled = true;
+        document.getElementById('next-btn').disabled = true;
+        document.getElementById('exit-btn').disabled = true;
+        return;
+      }
+      const lab = labsData.find(l => l.number === currentLab);
+      const task = lab.tasks[currentTask];
+      document.getElementById('task-instructions').innerHTML = `<strong>${task.title}</strong><br><br>${task.instructions}`;
+      document.getElementById('check-result').textContent = `🔎 Task ${currentTask + 1} of ${lab.tasks.length}`;
+      document.getElementById('prev-btn').disabled = currentTask === 0;
+      document.getElementById('next-btn').disabled = currentTask === lab.tasks.length - 1;
+      document.getElementById('exit-btn').disabled = false;
+    }
+
+    function updateLabHighlight() {
+      const labItems = document.querySelectorAll('.lab-item');
+      labItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.textContent === labsData.find(l => l.number === currentLab)?.title) {
+          item.classList.add('active');
+        }
+      });
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
+    }
+
+    document.getElementById('prev-btn').onclick = () => {
+      if (currentTask > 0) {
+        currentTask--;
+        updateTaskDisplay();
+        updateWebSocket(currentLab);
+      }
+    };
+
+    document.getElementById('next-btn').onclick = () => {
+      const lab = labsData.find(l => l.number === currentLab);
+      if (currentTask < lab.tasks.length - 1) {
+        currentTask++;
+        updateTaskDisplay();
+        updateWebSocket(currentLab);
+      }
+    };
+
+    document.getElementById('exit-btn').onclick = () => {
+      currentLab = null;
+      currentTask = 0;
+      updateTaskDisplay();
+      updateWebSocket(null);
+      updateLabHighlight();
+      window.location.href = '/labs.html'; // Redirect to lab index
+    };
+
+    window.onload = loadLabs;
+  </script>
+  <script src="/app.js"></script>
+</body>
+</html>

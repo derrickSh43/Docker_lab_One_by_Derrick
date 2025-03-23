@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Derrick's DevOps Lab - Index</title>
+  <style>
+    body { 
+      margin: 0; 
+      font-family: 'Segoe UI', sans-serif; 
+      background-color: #0e0e1a; 
+      color: #f0f0f0; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      min-height: 100vh; 
+      padding: 20px; 
+    }
+    h1 { color: #00cec9; font-size: 28px; margin-bottom: 20px; }
+    #lab-list { 
+      width: 100%; 
+      max-width: 600px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+    }
+    .lab-item { 
+      background: #2a2a3d; 
+      padding: 15px; 
+      border-radius: 6px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      transition: background 0.3s; 
+    }
+    .lab-item:hover { background: #3a3a50; }
+    .lab-item span { font-size: 16px; }
+    .lab-item button { 
+      background: #00b894; 
+      border: none; 
+      color: white; 
+      padding: 8px 16px; 
+      font-size: 14px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      transition: background 0.2s; 
+    }
+    .lab-item button:hover { background: #019875; }
+    body.light { background-color: #ffffff; color: #1e1e2f; }
+    body.light h1 { color: #00cec9; }
+    body.light .lab-item { background: #eaeaea; color: #000; }
+    body.light .lab-item:hover { background: #dcdcdc; }
+  </style>
+</head>
+<body class="dark">
+  <h1>📋 DevOps Labs</h1>
+  <div id="lab-list"></div>
+  <script>
+    async function loadLabs() {
+      try {
+        const response = await fetch('/labs');
+        const labsData = (await response.json()).labs;
+        const labList = document.getElementById('lab-list');
+        labList.innerHTML = '';
+        labsData.forEach(lab => {
+          const labItem = document.createElement('div');
+          labItem.className = 'lab-item';
+          labItem.innerHTML = `
+            <span>${lab.title}</span>
+            <button onclick="startLab(${lab.number})">Start Lab</button>
+          `;
+          labList.appendChild(labItem);
+        });
+      } catch (error) {
+        console.error('Failed to load labs:', error);
+        document.getElementById('lab-list').innerHTML = '<p>❌ Error loading labs</p>';
+      }
+    }
+
+    function startLab(labNumber) {
+      window.location.href = `/index.html?lab=${labNumber}`;
+    }
+
+    window.onload = loadLabs;
+  </script>
+</body>
+</html>

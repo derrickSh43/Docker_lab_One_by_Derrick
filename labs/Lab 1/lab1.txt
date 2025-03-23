@@ -1,0 +1,108 @@
+# Lab 1: Linux Command Line Basics for DevOps
+
+### 1. Navigating the File System
+
+Use these commands to explore the Linux file system:
+
+`pwd` - Print the current working directory
+
+`cd` - Change the current directory
+
+`ls` - List directory contents
+
+Task:
+Use `pwd` to display your current directory.
+Then, use `cd` to navigate to `/home` and `ls` to list its contents.
+
+### 2. Managing Files and Directories
+
+Work with files and folders using these commands:
+
+`touch` - Create an empty file
+
+`mkdir` - Create a new directory
+
+`rm` - Remove a file
+
+`cp` - Copy a file
+
+`mv` - Move or rename a file
+
+Task:
+Create a directory named `devops_lab` with `mkdir`.
+
+Inside it, create `lab.txt` using `touch`.
+
+Copy `lab.txt` to `backup.txt` with `cp`.
+
+Remove `backup.txt` using `rm`.
+
+Rename `lab.txt` to `task.txt` with `mv`.
+
+### 3. Working with Processes
+
+Monitor and manage processes with these tools:
+
+`ps` - View current processes
+
+`top` - Monitor processes in real-time
+
+`kill` - Terminate a process by PID
+
+Task:
+Use `ps` to list processes.
+
+Run `top` to observe resource usage.
+
+Use `kill` to stop a non-essential process (e.g., `top`).
+
+### 4. System Information and Networking
+
+Check system stats and network with these commands:
+
+`df -h` - Show disk usage
+
+`free -h` - Show memory usage
+
+`ping` - Test connectivity
+
+Task:
+Use `df -h` to check disk space.
+
+Use `free -h` to check memory.
+
+Ping `google.com` to test connectivity.
+
+### 5. Basic Text Processing
+
+Process text files with these utilities:
+
+`cat` - View file contents
+
+`grep` - Search for patterns
+
+`sed` - Edit text streams
+
+Task:
+Use `cat` to view `task.txt`.
+
+Use `grep` to find a word in `task.txt`.
+
+Use `sed` to replace text in `task.txt`.
+
+### 6. Managing Users and Permissions
+
+Control access with these commands:
+
+`chmod` - Change file permissions
+
+`chown` - Change file ownership
+
+`useradd` - Add a new user
+
+Task:
+Use `chmod` to make `task.txt` owner-readable only.
+
+Create a user `clouduser` with `useradd`.
+
+Change `task.txt` ownership to `clouduser` with `chown`.
