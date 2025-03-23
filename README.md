@@ -3,6 +3,7 @@
 Welcome to Derrick’s DevOps Lab! This guide walks you through building the project from scratch, setting up your environment, creating a Docker container, testing it locally, and uploading the image to Docker Hub. Follow each step carefully, and don’t rush—take your time to understand what’s happening!
 
 ---
+![lab1image](https://github.com/user-attachments/assets/03f6e946-f8f4-4db0-8971-dd37a57a56d0)
 
 ## Prerequisites
 
