@@ -61,6 +61,7 @@ my-devops-lab/
 │       ├── lab1.txt
 │       └── validate.sh
 ```
+![image](https://github.com/user-attachments/assets/1bed5e6d-0542-403e-bd83-80470a9fc7b3)
 
 ---
 
